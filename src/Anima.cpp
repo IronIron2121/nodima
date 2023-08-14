@@ -1,13 +1,21 @@
 #include "Anima.h"
+#include "NoteNode.h"
+
 
 // constructor
-Anima::Anima(int boredom, int restlessness, int BPM) {
-	this->boredom = boredom;
-	this->restlessness = restlessness;
-	this->BPM = BPM;
+Anima::Anima(int rootBPM, NoteNode* startNode) {
+	this->boredom = 0;
+	this->restlessness = 0;
+	this->rootBPM = rootBPM;
+	this->currBPM = this->rootBPM;
 }
 
+
 void Anima::move(){
+	std::vector<std::vector<int>>currDistances = this->currentNode->getDistances();
+	this->chooseProb(currDistances);
+
+
 	/*
 	PSEUDEO-CODE
 
@@ -21,36 +29,54 @@ void Anima::move(){
 	this->BPM += 1
 
 	this->distanceVector = this->currentNode->getDistances()
+	// yeah - actually, it's a lot simpler if every node contains its distance information in...itself
+	although in that case we're holding a lot more in memory
 	*/
 }
 
-// recall that softmax = e^z / sum(e^z), where z is a given vector
-std::vector<double> Anima::softmax(std::vector<double>& z) {
 
-	// grab the max value in the input vector z. we'll use this to avoid huge numbers
-	double max_val = *std::max_element(z.begin(), z.end());
-	
-	// init sum to 0
-	double sum = 0.0;
+std::pair<int,int> Anima::chooseProb(std::vector<std::vector<int>>){
+	// generate random value between 0 and 1
+	std::random_device rd; 
+	std::mt19937 gen(rd()); 
+	std::uniform_real_distribution<> dis(0, 1); 
+	double threshold = dis(gen); 
 
-	// get the exponential sum of the vector, minus maximum val.
-	for (auto val : z) {
-		sum += std::exp(val - max_val);
+	// choose sample from dsitribution based on random value & softmax probabilities
+	double cumulativeProb = 0.0;
+	for (size_t i = 0; i < probs.size(); ++i) {
+		for(size_t j = 0; j < probs[i].size(); ++j{
+			// add the probability of current index to cumulative probability
+			cumulativeProb += probs[i][j]; 
+
+			// if the cumulative probability is greater than the random value, return the index
+			if (threshold <= cumulativeProb) {
+				std::pair<int, int> index(i, j);
+				return index; 
+			}
+		}
 	}
-
-	// make new vector with size as the input to store output probabilities
-	std::vector<double> probs(z.size());
-
-	// get softmax probability of every element in the input vector
-	for (size_t i = 0; i < z.size(); i++) {
-		// calculate the exponential of (element - max_val) then divide by the sum of vector to normalize
-		probs[i] = std::exp(z[i] - max_val) / sum;
-	}
-
-	// return softmax probabilities
-	return probs;
 }
 
 
+// softmax = e^z / sum(e^z),  z == provided vector, e == euler's number
+std::vector<std::vector<double>> Anima::softmax(const std::vector<std::vector<double>>& z) {
+    double sum = 0.0;
 
-// calculate distance. we use the manhattan distance to account for orthogonality
+    // calculate the sum of exponentials for input vector
+    for (const auto& row : z) {
+        for (double val : row) {
+            sum += std::exp(val);
+        }
+    }
+
+    // compute softmax probabilities
+    std::vector<std::vector<double>> softmaxProbabilities(z.size(), std::vector<double>(z[0].size()));
+    for (size_t i = 0; i < z.size(); i++) {
+        for (size_t j = 0; j < z[i].size(); j++) {
+            softmaxProbabilities[i][j] = std::exp(z[i][j]) / sum;
+        }
+    }
+
+    return softmaxProbabilities;
+}
