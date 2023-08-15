@@ -1,6 +1,9 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ScaleTransposer.h"
+#include "Anima.h"
+#include "NoteNode.h"
 
 class ofApp : public ofBaseApp{
 
@@ -20,5 +23,18 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+		void initNoteNodeVector(int numOctaves, std::map<int, double>);
+
+
+		int thisBPM;
+
+		ScaleTransposer scaleTransposer;
+		int octaves;
+
+		std::vector<Anima*> animas;
+		std::vector<std::vector<NoteNode*>> noteNodeVector;
+
+		maxiOsc beatClock;
+
 		
 };
