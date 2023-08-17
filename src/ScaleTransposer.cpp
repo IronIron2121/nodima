@@ -10,10 +10,54 @@ ScaleTransposer::ScaleTransposer() {
 
     // enumerate the available scales
     this->major = {
-        {0, 261.63}, {2, 293.66}, {4, 329.63}, {5, 349.23},
-        {7, 392.00}, {9, 440.00}, {11, 493.88}
+        {0, 130.81},  // C3
+        {2, 146.83},  // D3
+        {4, 164.81},  // E3
+        {5, 174.61},  // F3
+        {7, 196.00},  // G3
+        {9, 220.00},  // A3
+        {11, 246.94}  // B3
+    };
+    this->minor = {
+        {0, 130.81},   // C3
+        {2, 146.83},   // D3
+        {3, 155.56},   // E_flat_3
+        {5, 174.61},   // F3
+        {7, 196.00},   // G3
+        {8, 207.65},   // A_flat_3
+        {10, 233.08}   // B_flat_3
+    };
+    this->lydian = {
+        {0, 130.81},  // C3
+        {2, 146.83},  // D3
+        {4, 164.81},  // E3
+        {6, 185.00},  // F_sharp_3
+        {7, 196.00},  // G3
+        {9, 220.00},  // A3
+        {11, 246.94}  // B3
+    };
+    this->blues = {
+        {0, 130.81},   // C3
+        {3, 155.56},   // E_flat_3
+        {5, 174.61},   // F3
+        {6, 185.00},   // F_sharp_3
+        {7, 196.00},   // G3
+        {10, 233.08}   // B_flat_3
+    };
+    this->hijaz = {
+        {0, 130.81},   // C3
+        {1, 138.59},   // D_flat_3
+        {4, 164.81},   // E3
+        {5, 174.61},   // F3
+        {7, 196.00},   // G3
+        {8, 207.65},   // G_sharp_3
+        {10, 233.08},  // B_flat_3
     };
     this->baseScale["Major"] = this->major;
+    this->baseScale["Minor"] = this->minor;
+    this->baseScale["Lydian"] = this->lydian;
+    this->baseScale["Blues"] = this->blues;
+    this->baseScale["Hijaz"] = this->hijaz;
 }
 
 std::map<int, double> ScaleTransposer::transpose(std::string givenKey, std::string scaleName) {

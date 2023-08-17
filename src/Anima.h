@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <algorithm>
+#include "ofxMaxim.h"
+
 
 // forward declaration
 class NoteNode;
@@ -24,23 +26,26 @@ private:
 	double restlessnessInterval;
 	int rootBPM; 
 	int currBPM; 
+	NoteNode* currentNode; // the node currently inhabited by the anima
+	NoteNode* previousNode; // the node previously inhabited by the anima
 
-	std::vector<std::vector<NoteNode*>> noteNodeVector; // vector of all note nodes
+	std::vector<std::vector<NoteNode>>* noteNodeVector; // vector of all note nodes
 
 
 	void move(); // move to another node
-	void initAttributes(bool reset);
-	double Anima::getRandomDouble(int min, int max);
+	void initAttributes(bool reset = false);
+	double Anima::getRandomDouble(int min = 0, int max = 1);
 	std::vector<std::vector<double>> softmax(const std::vector<std::vector<int>>& z); // calculate movement probability distribution
 	std::pair<int,int> chooseProb(const std::vector<std::vector<double>>& probabilities); // choose a node based on the probability distribution
 
 public:
-	Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode*>>); // constructor
-	NoteNode* startNode; // the node the anima starts on
-	NoteNode* currentNode; // the node currently inhabited by the 
-	void Anima::bpmCallBack();
+	Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>>*, maxiOsc anOsc, maxiEnv anEnv, maxiClock anClock); // constructor
+	void ifMove();
+	double Anima::getCurrentNote();
+	maxiClock anClock;
+	maxiEnv anEnv;
+	maxiOsc anOsc;
 
-	~Anima(); // destructor
 
 };
 

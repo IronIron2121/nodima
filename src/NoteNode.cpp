@@ -1,5 +1,5 @@
 #include "NoteNode.h"
-
+#include <iostream>
 
 NoteNode::NoteNode(int x, int y, float radius, int note){
     // grab the passed parameters
@@ -7,22 +7,21 @@ NoteNode::NoteNode(int x, int y, float radius, int note){
     this->y = y;
     this->radius = radius;
     this->note = note;
-    this->osc = maxiOsc(this->note, 0);
 }
 
 
-void NoteNode::initDistanceVector(std::vector<std::vector<NoteNode*>> NoteVector) {
-    distanceVector.resize(NoteVector.size());
+void NoteNode::initDistanceVector(std::vector<std::vector<NoteNode>> NoteVector) {
+    this->distanceVector.resize(NoteVector.size());
     // for every row in the vector
-    for(size_t i; i < NoteVector.size(); i++){
+    for(size_t i = 0; i < NoteVector.size(); i++){
         // resize the row
-        distanceVector[i].resize(NoteVector[i].size());
+        this->distanceVector[i].resize(NoteVector[i].size());
         // for every node in the row
-        for(size_t j; j < NoteVector[i].size(); j++){
+        for(size_t j = 0; j < NoteVector[i].size(); j++){
             // grab the node
-            NoteNode* thatNode = NoteVector[i][j];
+            NoteNode thatNode = NoteVector[i][j];
             // calculate the manhattan distance between this node and that node
-            distanceVector[i][j] = abs(this->x - thatNode->getX()) + abs(this->y - thatNode->y);
+            distanceVector[i][j] = abs(this->x - thatNode.getX()) + abs(this->y - thatNode.y);
         }
     }   
 }
@@ -42,12 +41,12 @@ int NoteNode::getY(){
 float NoteNode::getRadius(){
     return this->radius;
 };
-ofPoint NoteNode::getPosition(){
-    return this->position;
-};
-int NoteNode::getNote(){
+
+double NoteNode::getNote(){
     return this->note;
 };
-std::vector<std::vector<double>> NoteNode::getDistances(){
+std::vector<std::vector<int>> NoteNode::getDistances(){
+    //std::cout << "In NoteNode - rows size = " << this->distanceVector.size() << std::endl;
+    //std::cout << "In NoteNode - cols size = " << this->distanceVector[0].size() << std::endl;
     return this->distanceVector;
 };

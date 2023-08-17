@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <iostream>
 
 class ScaleTransposer{
 private:
@@ -9,7 +10,6 @@ private:
     // every note in the scale relative to C
     std::map<std::string, int> noteIndices;
     // function to transpose chosen scale based on user input
-    std::map<int, double> transpose(std::string targetKey, std::string scaleName);
 
 
     // available scales. we list them at their values at C4
@@ -17,11 +17,14 @@ private:
     std::map<int, double> minor;
     std::map<int, double> blues;
     std::map<int, double> lydian;
+    std::map<int, double> hijaz;
 
 
 
 
 public:
     ScaleTransposer();
+    std::map<int, double> transpose(std::string targetKey, std::string scaleName);
+
 
 };

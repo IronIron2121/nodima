@@ -4,7 +4,8 @@
 #include "ScaleTransposer.h"
 #include "Anima.h"
 #include "NoteNode.h"
-
+#include "ofxMaxim.h"
+ 
 class ofApp : public ofBaseApp{
 
 	public:
@@ -25,16 +26,38 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 		void initNoteNodeVector(int numOctaves, std::map<int, double>);
 
+		// -- FROM AUDIO EXAMPLE 
+		void audioOut(ofSoundBuffer& output);
+		ofSoundStream soundStream;
+		int		bufferSize;
+		int		sampleRate;
+		bool 	bNoise;
+		float 	pan;
+		float 	volume;
+		vector <float> lAudio;
+		vector <float> rAudio;
+		//------------------- for the simple sine wave synthesis
+		float 	targetFrequency;
+		float 	phase;
+		float 	phaseAdder;
+		float 	phaseAdderTarget;
+		double  outNote0;
+		double  outNote1;
+
+		double envelopeOut;
 
 		int thisBPM;
 
 		ScaleTransposer scaleTransposer;
 		int octaves;
 
-		std::vector<Anima*> animas;
-		std::vector<std::vector<NoteNode*>> noteNodeVector;
-
-		maxiOsc beatClock;
+		std::vector<Anima> animas;
+		int numAnimas;
+		std::vector<std::vector<NoteNode>> noteNodeVector;
+		maxiEnv thisEnvelope;
+		maxiOsc myOsc;
+		std::map<int, double> currentScale;
+		std::vector<double> outNotes;
 
 		
 };

@@ -2,67 +2,89 @@
 #include <iostream>
 
 
-
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-
+	// ----- BORING NECESSARY STUFF ----- //
 	// set background
-	ofBackground(34, 34, 34);
-
+	ofBackground(34, 124, 34);
 	// settings for sound stream, all standard
-	int bufferSize		= 512;
+	bufferSize		    = 512;
 	sampleRate 			= 44100;
+
 	phase 				= 0;
 	phaseAdder 			= 0.0f;
 	phaseAdderTarget 	= 0.0f;
 	volume				= 0.1f;
-	bNoise 				= false;
-
 	// init stereo buffers
 	lAudio.assign(bufferSize, 0.0);
 	rAudio.assign(bufferSize, 0.0);
-
 	// init sound stream
 	soundStream.printDeviceList();
-	// create empty settings object
+	// create empty settings object and set out settings to it
 	ofSoundStreamSettings settings;
-	// set the settings
 	settings.setOutListener(this);
-	settings.sampleRate = sampleRate;
+	settings.sampleRate 	   = sampleRate;
 	settings.numOutputChannels = 2;
-	settings.numInputChannels = 0;
-	settings.bufferSize = bufferSize;
+	settings.numInputChannels  = 0;
+	settings.bufferSize 	   = bufferSize;
+    // set-up soundstream and maximilian
+    ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
 	soundStream.setup(settings);
+	// ----- END OF BORING NECESSARY STUFF ----- //
 
+	// set up the baseBPM
 	thisBPM = 120;
-	// set up the BPM clock
-    myClock.setTempo(thisBPM);  // Set BPM here
-    myClock.setTicksPerBeat(1);  // 1 tick per beat
+    // set initial number of animas
+    numAnimas = 2;
 
-	currentScale = scaleTransposer.transpose("C", "Major");
-	octaves = 4;
-
+	// set up the scale and the octaves
+	currentScale = scaleTransposer.transpose("C", "Lydian");
+	octaves 	 = 3;
 	initNoteNodeVector(octaves, currentScale);
 
-	animas.push_back(Anima(thisBPM, noteNodeVector[0][0]));
+    for (int i = 0; i < numAnimas; i++) {
+        // get random coordinates for initial note node
+        int randX = (int)ofRandom(noteNodeVector.size());
+        int randY = (int)ofRandom(noteNodeVector[0].size());
+        // create a clock for this anima
+        maxiClock thisClock;
+        thisClock.setTempo(thisBPM);
+        thisClock.setTicksPerBeat(1);
+        // create an oscillator for this anima
+        maxiOsc thisOsc;
+        // make an ADSR envelope for this anima
+        maxiEnv thisEnv;
+        envelopeOut = thisEnv.adsr(1., thisEnv.trigger);
+        thisEnv.setAttack(10);
+        thisEnv.setDecay(500);
+        thisEnv.setSustain(1);   
+        thisEnv.setRelease(500);
+        // push anima to the array
+        animas.push_back(Anima(thisClock.bpm, &noteNodeVector[randX][randY], &noteNodeVector, thisOsc, thisEnv, thisClock));
+    }
+
+    for (int i = 0; i < animas.size(); i++) {
+        outNotes.push_back(animas[i].getCurrentNote());
+    }
 
 }
 
 void ofApp::initNoteNodeVector(int numOctaves, std::map<int, double> currentScale){
-    for(int row = numOctaves; row >= 0; row--) {
+    noteNodeVector.resize(numOctaves + 1);  
+    for(int row = 0; row <= numOctaves; row++) {
+        std::vector<NoteNode> octaveNodes;
         int col = 0;
         for(auto it = currentScale.begin(); it != currentScale.end(); it++) {
-			
-            // compute note value for this node, multiplying to get octvate
             double thisNote = it->second * std::pow(2, row);
-            
-            // init the note nodes with x, y, radius, and note value
-            noteNodeVector.push_back(NoteNode(row, col, 20, thisNote));
-            // debugging
-            std::cout << "NoteNode created with value: " << thisNote << std::endl;
-			col++;
-
+            octaveNodes.push_back(NoteNode(row, col, 20, thisNote));
+            col++;
+        }
+        noteNodeVector[row] = octaveNodes;
+    }
+    for (int i = 0; i < noteNodeVector.size(); i++) {
+        for (int j = 0; j < noteNodeVector[i].size(); j++) {
+            noteNodeVector[i][j].initDistanceVector(noteNodeVector);
         }
     }
 }
@@ -71,49 +93,41 @@ void ofApp::initNoteNodeVector(int numOctaves, std::map<int, double> currentScal
 //--------------------------------------------------------------
 void ofApp::update(){
 
+
+
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	std::cout << "Testing!" << std::endl;
 
 }
 
-void ofApp::audioOut(ofSoundBuffer& buffer){
-	beatClock.ticker();
+void ofApp::audioOut(ofSoundBuffer& output) {
+    std::size_t outChannels = output.getNumChannels();
+    for (int i = 0; i < output.getNumFrames(); i++) {
+        double outWave = 0.0;
+        for (int j = 0; j < animas.size(); j++) {
+            // check if this anima's BPM clock has ticked
+            animas[j].anClock.ticker();
+            if (animas[j].anClock.tick) {
+                animas[j].anEnv.trigger = 1;
+                animas[j].ifMove();
+            }
+            else {
+                animas[j].anEnv.trigger = 0;
+            }
+            double envOut = animas[j].anEnv.adsr(1., animas[j].anEnv.trigger);
+            outWave += animas[j].anOsc.sinewave(animas[j].getCurrentNote()) * envOut;
+             // outWave += animas[j].anOsc.sinewave(animas[j].getCurrentNote()) * animas[j].anEnv.adsr(1., animas[j].anEnv.trigger);
+        }
 
-	// run callbacks for all the animas
-	for(int anima = 0; anima < animas.size(); anima++){
-		animas[anima].bpmCB();
-	}
-
-	float leftScale = 1 - pan;
-	float rightScale = pan;
-
-	while(phase > TWO_PI){
-		phase -= TWO_PI;
-	}
-
-	// if we're on a beat, trigger the envelope to play a note
-	if beatClock.isTick(){
-		noteEnvelope.trigger = 1;
-	}
-
-	if(bNoise == true){
-		for(size_t i = 0; i < buffer.getNumFrames(); i++){
-			lAudio[i] = buffer[i*buffer.getNumChannels()	] = ofRandom(0, 1);
-			rAudio[i] = buffer[i*buffer.getNumChannels() + 1] = ofRandom(0, 1) * volume * rightScale;
-		}
-	} else{
-		phaseAddar = 0.95f * phaseAddar + 0.05f * phaseAddarTarget;
-		for(size_t i = 0; i < buffer.getNumFrames(); i++){
-			phase += phaseAddar;
-			float sample = sin(phase);
-			lAudio[i] = buffer[i*buffer.getNumChannels()	] = sample * volume * leftScale;
-			rAudio[i] = buffer[i*buffer.getNumChannels() + 1] = sample * volume * rightScale;
-		}
-	}
+        output[i * outChannels] = outWave / animas.size();
+        // output[i * outChannels] = myOsc.sinewave(440);
+        output[i * outChannels + 1] = output[i * outChannels];
+    }
 }
+
+
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
