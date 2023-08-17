@@ -7,7 +7,7 @@
 
 
 // constructor
-Anima::Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>>* noteNodeVector, maxiOsc anOsc, maxiEnv anEnv, maxiClock anClock) {
+Anima::Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>>* noteNodeVector, maxiOsc anOsc, maxiClock anClock, std::string thisNote, std::string thisScale) {
 	this->initAttributes();
 	this->rootBPM = rootBPM;
 	this->currBPM = this->rootBPM;
@@ -16,8 +16,9 @@ Anima::Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>
 	this->anClock.setTicksPerBeat(1);
 	this->currentNode = startNode;
 	this->noteNodeVector = noteNodeVector;
-	this->anEnv = anEnv;
 	this->anOsc = anOsc;
+	this->thisNote = thisNote;
+	this->thisScale = thisScale;
 };
 
 void Anima::initAttributes(bool reset){
@@ -29,7 +30,7 @@ void Anima::initAttributes(bool reset){
 	this->restlessnessInterval = 0.1;
 	this->maxRestlessness 	   = 1000;
 	this->patience 			   = 4.0;
-
+	this->pineal			   = false;
 }
 
 
@@ -45,13 +46,10 @@ void Anima::ifMove(){
 	if(randomGen < moveProbability){
 		this->move();
 	} else{
-		//std::cout << "No move!" << std::endl;
-		//std::cout << "randomGen == " << randomGen << std::endl;
-		//std::cout << "moveProbability == " << moveProbability << std::endl;
 		this->boredom += 1;
 	}
 }
-
+ 
 
 void Anima::move(){
 	// get the distances from the current node, choose the next node based on them
@@ -61,13 +59,17 @@ void Anima::move(){
 	this->currentNode 								   = &(*(this->noteNodeVector))[indices.first][indices.second];
 
 	// update anima attributes
-	this->boredom 	    = 0;
+	this->boredom = 0;
 	if (this->restlessness < this->maxRestlessness) {
-		this->restlessness += (1);
+		this->restlessness += 1;
 	}
 	else {
 		this->restlessness = 0;
+		this->pineal = false;
 		std::cout << "Restlessness reset!" << std::endl;
+	}
+	if (this->restlessness > (this->maxRestlessness / 2)) {
+		this->pineal = true;
 	}
 	this->anClock.setTempo(this->rootBPM + (this->restlessness*3.0));
 };
@@ -91,10 +93,10 @@ std::pair<int,int> Anima::chooseProb(const std::vector<std::vector<double>>& pro
 	}
 }
 
+
 double Anima::getRandomDouble(int min, int max){
 	return ofRandom(min, max);
 }
-
 
 
 
@@ -121,6 +123,31 @@ std::vector<std::vector<double>> Anima::softmax(const std::vector<std::vector<in
     return softmaxProbabilities;
 }
 
-double Anima::getCurrentNote(){
+
+// this was a fun idea but I couldn't get it to run well :(
+double Anima::getRandomNote() {
+	// get a random scale name
+	std::string randomScale = this->localTransposer.availableScales[ofRandom(0, this->localTransposer.availableScales.size())];
+
+	// get the indices for the selected scale
+	std::vector<int> selectedScaleIndices = this->localTransposer.scaleIndices[randomScale];
+
+	// select a random note index from the selected scale's indices
+	int randomNoteIndex = selectedScaleIndices[ofRandom(0, selectedScaleIndices.size())];
+
+	// use that name to key into the map of scales and get the frequency using the random note index
+	double randomNote = this->localTransposer.baseScale[this->thisNote][randomNoteIndex]; 
+
+	return randomNote;
+}
+
+
+double Anima::getCurrentNote() {
+	if (this->pineal) {
+		if (this->getRandomDouble() < (0.25 * (this->restlessness/this->maxRestlessness))) {
+			return this->getRandomNote();
+		}
+	}
+
 	return this->currentNode->getNote();
 }

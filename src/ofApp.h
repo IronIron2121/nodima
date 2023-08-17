@@ -54,10 +54,20 @@ class ofApp : public ofBaseApp{
 		std::vector<Anima> animas;
 		int numAnimas;
 		std::vector<std::vector<NoteNode>> noteNodeVector;
-		maxiEnv thisEnvelope;
+		std::vector<maxiEnv*> envVector;
+		maxiEnv testEnvelope;
 		maxiOsc myOsc;
 		std::map<int, double> currentScale;
 		std::vector<double> outNotes;
+		double outNote = 0.0;
+
+		maxiEnv env1;
+		maxiEnv env2;
+		maxiEnv env3;
+
+		std::string currentScaleName;
+		std::string currentRootNote;
+
 
 		
 };

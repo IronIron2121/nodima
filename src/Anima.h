@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include "ofxMaxim.h"
+#include "ScaleTransposer.h"
 
 
 // forward declaration
@@ -24,12 +25,14 @@ private:
 	// the number that forms a product with boredom to 
 	double boredomInterval;
 	double restlessnessInterval;
+
 	int rootBPM; 
 	int currBPM; 
-	NoteNode* currentNode; // the node currently inhabited by the anima
-	NoteNode* previousNode; // the node previously inhabited by the anima
+	bool pineal;
 
 	std::vector<std::vector<NoteNode>>* noteNodeVector; // vector of all note nodes
+	NoteNode* currentNode; // the node currently inhabited by the anima
+	NoteNode* previousNode; // the node previously inhabited by the anima
 
 
 	void move(); // move to another node
@@ -37,14 +40,21 @@ private:
 	double Anima::getRandomDouble(int min = 0, int max = 1);
 	std::vector<std::vector<double>> softmax(const std::vector<std::vector<int>>& z); // calculate movement probability distribution
 	std::pair<int,int> chooseProb(const std::vector<std::vector<double>>& probabilities); // choose a node based on the probability distribution
+	ScaleTransposer localTransposer;
+	std::string thisNote;
+	std::string thisScale;
 
 public:
-	Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>>*, maxiOsc anOsc, maxiEnv anEnv, maxiClock anClock); // constructor
+	// constructor
+	Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>>*, maxiOsc anOsc, maxiClock anClock, std::string thisNote, std::string thisScale);
 	void ifMove();
 	double Anima::getCurrentNote();
 	maxiClock anClock;
-	maxiEnv anEnv;
 	maxiOsc anOsc;
+	double getRandomNote();
+
+
+
 
 
 };
