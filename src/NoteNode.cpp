@@ -1,15 +1,16 @@
 #include "NoteNode.h"
 #include <iostream>
 
-NoteNode::NoteNode(int x, int y, float radius, int note){
+
+NoteNode::NoteNode(int x, int y, int note){
     // grab the passed parameters
     this->x = x;
     this->y = y;
-    this->radius = radius;
     this->note = note;
 }
 
 
+// a vector containing distances of all nodes relative to this node
 void NoteNode::initDistanceVector(std::vector<std::vector<NoteNode>> NoteVector) {
     this->distanceVector.resize(NoteVector.size());
     // for every row in the vector
@@ -27,26 +28,26 @@ void NoteNode::initDistanceVector(std::vector<std::vector<NoteNode>> NoteVector)
 }
 
 
-void NoteNode::playNote(){
-
-}
-
-
+// get x-pos in vector
 int NoteNode::getX(){
     return this->x;
 };
+
+
+// get y-pos in vector
 int NoteNode::getY(){
     return this->y;
 };
-float NoteNode::getRadius(){
-    return this->radius;
-};
 
+
+// get note for this node
 double NoteNode::getNote(){
     return this->note;
 };
+
+
+// get distance relative to this node
 std::vector<std::vector<int>> NoteNode::getDistances(){
-    //std::cout << "In NoteNode - rows size = " << this->distanceVector.size() << std::endl;
-    //std::cout << "In NoteNode - cols size = " << this->distanceVector[0].size() << std::endl;
+
     return this->distanceVector;
 };

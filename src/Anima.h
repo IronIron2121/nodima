@@ -10,48 +10,74 @@ class NoteNode;
 
 class Anima{
 private:
+	// ------------------------------------ PRIVATE FUNCTIONS ------------------------------------ /
+	// initialise attributes
+	void initAttributes(bool reset = false);
+	
+	// move to a new node
+	void move();
+
+	// return a random double 
+	double Anima::getRandomDouble(int min = 0, int max = 1);
+
+	// calculate probability of movement to different nodes relative to current position
+	std::vector<std::vector<double>> softmax(const std::vector<std::vector<int>>& z); 
+
+	// choose a node based on the probability distribution and returns its indices
+	std::pair<int, int> chooseProb(const std::vector<std::vector<double>>& probabilities); 
+	
 	// base numerator and denominator for movement calculation
 	double fractionBase;
-	// movement calculation numerator exponent
-	double equanimity;
-	// movement calculation numerator exponent additive
-	double boredom; 
-	// movement calculation denominator exponent
-	double patience; 
-	// movement calculation denominator exponent subtractive
-	double restlessness;
-	// max value for restlessness before resetting
-	double maxRestlessness; 
-	// the number that forms a product with boredom to 
-	double boredomInterval;
-	double restlessnessInterval;
+	double maxRestlessness;
 
+	// default / minimum BPM. we speed up from here, and also return to it when restlessness resets
 	int rootBPM; 
-	int currBPM; 
+
+	// boolean to track pineal mode activation and threshold of activation
 	bool pineal;
+	int pinealThresh;
 
-	std::vector<std::vector<NoteNode>>* noteNodeVector; // vector of all note nodes
-	NoteNode* currentNode; // the node currently inhabited by the anima
-	NoteNode* previousNode; // the node previously inhabited by the anima
+	// vector of all note nodes
+	std::vector<std::vector<NoteNode>>* noteNodeVector; 
+	// the node currently inhabited by the anima
+	NoteNode* currentNode; 
 
-
-	void move(); // move to another node
-	void initAttributes(bool reset = false);
-	double Anima::getRandomDouble(int min = 0, int max = 1);
-	std::vector<std::vector<double>> softmax(const std::vector<std::vector<int>>& z); // calculate movement probability distribution
-	std::pair<int,int> chooseProb(const std::vector<std::vector<double>>& probabilities); // choose a node based on the probability distribution
+	// we have a local transposer so we can get random notes from different scales in pineal mode
 	ScaleTransposer localTransposer;
 	std::string thisNote;
 	std::string thisScale;
 
 public:
 	// constructor
-	Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>>*, maxiOsc anOsc, maxiClock anClock, std::string thisNote, std::string thisScale);
+	Anima(int rootBPM, NoteNode* startNode, std::vector<std::vector<NoteNode>>*, maxiOsc anOsc, maxiClock anClock, std::string thisNote);
+	// figure out if we're going to move or not on this beat
 	void ifMove();
+	// return the note corresponding to anima's current node
 	double Anima::getCurrentNote();
-	maxiClock anClock;
-	maxiOsc anOsc;
+	// get a random note if we're in pineal mode
 	double getRandomNote();
+
+
+	// ------------------------------------ PRIVATE FUNCTIONS ------------------------------------ /
+	// determines and track tempo
+	maxiClock anClock;
+	// computes current signal output
+	maxiOsc anOsc;
+
+
+	// sadly I had to make these public due to some problems accessing them from outside the object
+	// movement calculation numerator exponent
+	double equanimity;
+	// movement calculation numerator exponent additive
+	double boredom;
+	// movement calculation denominator exponent
+	double patience;
+	// movement calculation denominator exponent subtractive
+	double restlessness;
+	// max value for restlessness before resetting
+	double restlessnessInterval;
+	// the number that forms a product with boredom to 
+	double boredomInterval;
 
 
 

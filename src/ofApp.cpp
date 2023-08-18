@@ -21,6 +21,7 @@ void ofApp::setup(){
 	rAudio.assign(bufferSize, 0.0);
 	// init sound stream
 	soundStream.printDeviceList();
+    ofSoundStreamListDevices();
 	// create empty settings object and set out settings to it
 	ofSoundStreamSettings settings;
 	settings.setOutListener(this);
@@ -28,25 +29,27 @@ void ofApp::setup(){
 	settings.numOutputChannels = 2;
 	settings.numInputChannels  = 0;
 	settings.bufferSize 	   = bufferSize;
+    
     // set-up soundstream and maximilian
     ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
-	soundStream.setup(settings);
+    soundStream.setup(settings);
 	// ----- END OF BORING NECESSARY STUFF ----- //
 
-	// set up the baseBPM
+	// set up the baseBPM, the initial number of animas
 	thisBPM = 120;
-    // set initial number of animas
     numAnimas = 3;
-
-	// set up the scale and the octaves
-
+	
+    
+    
+    // set up the scale and the octaves
     currentRootNote = "C";
     currentScaleName = "Hijaz";
-
 	currentScale = scaleTransposer.transpose(currentRootNote, currentScaleName);
 	octaves 	 = 3;
-	initNoteNodeVector(octaves, currentScale);
+	// initialise our nodes in accordance with this scale
+    initNoteNodeVector(octaves, currentScale);
 
+    // initialise our animas
     for (int i = 0; i < numAnimas; i++) {
         // get random coordinates for initial note node
         int randX = (int)ofRandom(noteNodeVector.size());
@@ -67,20 +70,19 @@ void ofApp::setup(){
             &noteNodeVector, 
             thisOsc, 
             thisClock,
-            currentRootNote,
-            currentScaleName
+            currentRootNote
             )
         );
     }
 
-
     /*
-    NOTE: I cannot for the life of me get maxiEnvelopes to work when dynamically allocated
-    They have to be initialised in the header, or they just don't work.
+    NOTE: I cannot for the life of me get maxiEnvelopes to work when i don't initialise them like this
+    They have to be initialised in the header, or they don't work.
     I tried making a vector of them. I tried making a vector of pointers of them. I tried initialising them in the anima class. 
     I don't have time to dig down into the memory, so for now this is all that I could figure out that actually works.
     But you can have values of "numAnimas" above 3 if you add more envelopes down here
     */
+
     env1.setAttack(10);
     env1.setDecay(500);
     env1.setSustain(1);
@@ -99,6 +101,14 @@ void ofApp::setup(){
     envVector.push_back(&(env1));
     envVector.push_back(&(env2));
     envVector.push_back(&(env3));
+
+    lastTicks.push_back(0);
+    lastTicks.push_back(0);
+    lastTicks.push_back(0);
+
+    nowTicks.push_back(0);
+    nowTicks.push_back(0);
+    nowTicks.push_back(0);
 }
 
 void ofApp::initNoteNodeVector(int numOctaves, std::map<int, double> currentScale){
@@ -110,13 +120,14 @@ void ofApp::initNoteNodeVector(int numOctaves, std::map<int, double> currentScal
         int col = 0;
         for(auto it = currentScale.begin(); it != currentScale.end(); it++) {
             double thisNote = it->second * std::pow(2, row);
-            octaveNodes.push_back(NoteNode(row, col, 20, thisNote));
+            octaveNodes.push_back(NoteNode(row, col, thisNote));
             col++;
         }
         noteNodeVector[row] = octaveNodes;
     }
     for (int i = 0; i < noteNodeVector.size(); i++) {
         for (int j = 0; j < noteNodeVector[i].size(); j++) {
+            // init distance vector for every node
             noteNodeVector[i][j].initDistanceVector(noteNodeVector);
         }
     }
@@ -126,18 +137,27 @@ void ofApp::initNoteNodeVector(int numOctaves, std::map<int, double> currentScal
 //--------------------------------------------------------------
 void ofApp::update(){
 
-
-
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-
+    for (int i = 0; i < animas.size(); i++) {
+        if (nowTicks[i] != lastTicks[i]) {
+            // i couldn't access these properly from within the class, so sadly we have to do it like this
+            double moveNumerator = std::pow(2.0, animas[i].equanimity + (animas[i].boredom * animas[i].boredomInterval));
+            double moveDenominator = std::pow(2.0, animas[i].patience - (animas[i].restlessness * animas[i].restlessnessInterval));
+            double moveProbability = (moveNumerator / moveDenominator);
+            // get some cute visuals depending on movement probability
+            ofBackground((int)ofRandom(0, 255) * moveProbability, (int)ofRandom(0, 255) * moveProbability, (int)ofRandom(0, 255) * moveProbability, 255);
+        }
+        lastTicks[i] = nowTicks[i];
+    }
 }
 
 void ofApp::audioOut(ofSoundBuffer& output) {
     std::size_t outChannels = output.getNumChannels();
     for (int i = 0; i < output.getNumFrames(); i++) {
+        // empty vals for left and right audio at beginning
         double totalLeft  = 0.;
         double totalRight = 0.;
 
@@ -148,6 +168,7 @@ void ofApp::audioOut(ofSoundBuffer& output) {
 
             if (animas[j].anClock.tick) {
                 // if we are, get move calculations and trigger the envelope
+                nowTicks[j]++;
                 envVector[j]->trigger = 1;
                 animas[j].ifMove();
 
@@ -162,7 +183,7 @@ void ofApp::audioOut(ofSoundBuffer& output) {
             double outWave          = animas[j].anOsc.sinewave(thisNote);
             double envelopeOut      = envVector[j]->adsr(1., envVector[j]->trigger);
             // add to output sum
-            totalLeft += (outWave * (0.5 / animas.size())) * envelopeOut;
+            totalLeft  += (outWave * (0.5 / animas.size())) * envelopeOut;
             totalRight += totalLeft;
 
 

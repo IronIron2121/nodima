@@ -24,6 +24,7 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+
 		void initNoteNodeVector(int numOctaves, std::map<int, double>);
 
 		// -- FROM AUDIO EXAMPLE 
@@ -45,6 +46,9 @@ class ofApp : public ofBaseApp{
 		double  outNote1;
 
 		double envelopeOut;
+
+		std::vector<int> lastTicks;
+		std::vector<int> nowTicks;
 
 		int thisBPM;
 

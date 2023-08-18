@@ -6,13 +6,10 @@
 
 class ScaleTransposer{
 private:
-
     // every note in the scale relative to C
     std::map<std::string, int> noteIndices;
-    // function to transpose chosen scale based on user input
 
-
-    // available scales. we list them at their values at C4
+    // available scales. we list them from their values at C2
     std::map<int, double> major;
     std::map<int, double> minor;
     std::map<int, double> blues;
@@ -22,19 +19,18 @@ private:
     std::map<int, double> phrygian;
     std::map<int, double> diminished;
 
-
-
-
-
 public:
+    // simple constructor
     ScaleTransposer();
+
+    // returns the frequencies of a scale given a target key and the name of a scale
     std::map<int, double> transpose(std::string targetKey, std::string scaleName);
+
+    // lists of available scales and notes - we're only really using these for pineal mode
     std::vector<std::string> availableScales;
     std::vector<std::string> availableNotes;
+
     // the frequencies of every available scale in Hz
     std::map<std::string, std::map<int, double>> baseScale;
     std::map<std::string, std::vector<int>> scaleIndices;
-
-
-
 };
