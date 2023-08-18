@@ -44,24 +44,6 @@ void Anima::initAttributes(bool reset){
 	this->pineal			   = false;
 	this->pinealThresh		   = 2;
 }
-
-
-// determine if this Anima should move based on the current state and random factors
-void Anima::ifMove(){
-	// calculate the probability of movement based on current attributes
-	double moveNumerator   = std::pow(this->fractionBase, this->equanimity + (this->boredom 	  * this->boredomInterval	  ));
-	double moveDenominator = std::pow(this->fractionBase, this->patience   - (this->restlessness * this->restlessnessInterval));
-	double moveProbability = (moveNumerator / moveDenominator);
-
-	// compare generated probability with random val to decide on movement
-	double randomGen 	   = this->getRandomDouble();
-	if(randomGen < moveProbability){
-		this->move();
-	} else{
-		// if we didn't move, make movement more likely next time
-		this->boredom += 1;
-	}
-}
  
 
 // do movement from current to next node

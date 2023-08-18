@@ -38,8 +38,6 @@ void ofApp::setup(){
 	// set up the baseBPM, the initial number of animas
 	thisBPM = 120;
     numAnimas = 3;
-	
-    
     
     // set up the scale and the octaves
     currentRootNote = "C";
